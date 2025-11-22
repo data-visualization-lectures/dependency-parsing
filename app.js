@@ -11,6 +11,7 @@ const clearBtn = document.getElementById('clearBtn');
 const exportSvgBtn = document.getElementById('exportSvgBtn');
 const exportPngBtn = document.getElementById('exportPngBtn');
 const exportDataBtn = document.getElementById('exportDataBtn');
+const exportGexfBtn = document.getElementById('exportGexfBtn');
 const exportButtons = document.getElementById('exportButtons');
 const chartSelector = document.getElementById('chartSelector');
 const chartType = document.getElementById('chartType');
@@ -70,6 +71,7 @@ function setupEventListeners() {
     exportSvgBtn.addEventListener('click', () => visualizer.exportSVG());
     exportPngBtn.addEventListener('click', () => visualizer.exportPNG());
     exportDataBtn.addEventListener('click', handleDownloadData);
+    exportGexfBtn.addEventListener('click', handleDownloadGexf);
 
     // Enter key in textarea
     inputText.addEventListener('keydown', (e) => {
@@ -168,6 +170,66 @@ function handleDownloadData() {
     link.click();
 
     URL.revokeObjectURL(url);
+}
+
+/**
+ * Handle GEXF download button click
+ */
+function handleDownloadGexf() {
+    if (!currentParseResult) {
+        alert('ダウンロードするデータがありません。');
+        return;
+    }
+
+    const { bunsetsu, dependencies } = currentParseResult;
+
+    // Create GEXF XML structure
+    let gexfXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    gexfXml += '<gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">\n';
+    gexfXml += '  <graph mode="static" defaultedgetype="directed">\n';
+
+    // Add nodes
+    gexfXml += '    <nodes>\n';
+    bunsetsu.forEach((b, i) => {
+        // Escape XML special characters
+        const label = escapeXml(b.surface);
+        gexfXml += `      <node id="${i}" label="${label}"/>\n`;
+    });
+    gexfXml += '    </nodes>\n';
+
+    // Add edges
+    gexfXml += '    <edges>\n';
+    dependencies.forEach((dep, i) => {
+        const label = escapeXml(dep.label);
+        gexfXml += `      <edge id="${i}" source="${dep.from}" target="${dep.to}" label="${label}"/>\n`;
+    });
+    gexfXml += '    </edges>\n';
+
+    gexfXml += '  </graph>\n';
+    gexfXml += '</gexf>';
+
+    // Create blob and download
+    const blob = new Blob([gexfXml], { type: 'application/gexf+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dependency-parsing-data.gexf';
+    link.click();
+
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Escape XML special characters
+ */
+function escapeXml(unsafe) {
+    return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 }
 
 /**
