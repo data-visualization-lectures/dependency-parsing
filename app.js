@@ -10,6 +10,7 @@ const sampleBtn = document.getElementById('sampleBtn');
 const clearBtn = document.getElementById('clearBtn');
 const exportSvgBtn = document.getElementById('exportSvgBtn');
 const exportPngBtn = document.getElementById('exportPngBtn');
+const exportDataBtn = document.getElementById('exportDataBtn');
 const exportButtons = document.getElementById('exportButtons');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const infoPanel = document.getElementById('infoPanel');
@@ -66,6 +67,7 @@ function setupEventListeners() {
     // Export buttons
     exportSvgBtn.addEventListener('click', () => visualizer.exportSVG());
     exportPngBtn.addEventListener('click', () => visualizer.exportPNG());
+    exportDataBtn.addEventListener('click', handleDownloadData);
 
     // Enter key in textarea
     inputText.addEventListener('keydown', (e) => {
@@ -126,6 +128,30 @@ function handleSample() {
 function handleClear() {
     inputText.value = '';
     inputText.focus();
+}
+
+/**
+ * Handle data download button click
+ */
+function handleDownloadData() {
+    if (!currentParseResult) {
+        alert('ダウンロードするデータがありません。');
+        return;
+    }
+
+    // Create JSON data
+    const jsonData = JSON.stringify(currentParseResult, null, 2);
+
+    // Create blob and download
+    const blob = new Blob([jsonData], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dependency-parsing-data.json';
+    link.click();
+
+    URL.revokeObjectURL(url);
 }
 
 /**
