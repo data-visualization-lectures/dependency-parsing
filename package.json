@@ -1,0 +1,25 @@
+{
+  "name": "japanese-dependency-parser",
+  "version": "1.0.0",
+  "description": "日本語係り受け解析可視化ツール - Japanese Dependency Parsing Visualization Tool",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npx http-server -p 8080 -o",
+    "start": "npx http-server -p 8080"
+  },
+  "keywords": [
+    "japanese",
+    "nlp",
+    "dependency-parsing",
+    "visualization",
+    "kuromoji"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "kuromoji": "^0.1.2"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
