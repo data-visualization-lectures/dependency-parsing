@@ -68,9 +68,9 @@ class DependencyVisualizer {
         // Calculate dimensions
         this.calculateDimensions(hierarchyData);
 
-        // Ensure minimum width that fits the container, but allow larger if needed
+        // Constrain width to container width for responsiveness
         const containerWidth = this.container.clientWidth - 40; // Account for padding
-        this.width = Math.max(containerWidth, this.width);
+        this.width = Math.min(containerWidth, this.width);
 
         // Create SVG
         this.svg = d3.select(this.container)
@@ -411,7 +411,7 @@ class DependencyVisualizer {
 
         // Set SVG dimensions (responsive to container width)
         const containerWidth = this.container.clientWidth - 40; // Account for padding
-        this.width = Math.max(containerWidth, 800);
+        this.width = Math.min(containerWidth, 1200); // Constrain to container width
         this.height = Math.max(600, window.innerHeight - 400);
 
         // Create SVG
@@ -566,7 +566,7 @@ class DependencyVisualizer {
 
         // Set SVG dimensions (responsive to container width)
         const containerWidth = this.container.clientWidth - 40; // Account for padding
-        this.width = Math.max(containerWidth, 800);
+        this.width = Math.min(containerWidth, 1200); // Constrain to container width
         this.height = Math.max(400, bunsetsu.length * 60);
 
         // Create SVG
@@ -689,7 +689,8 @@ class DependencyVisualizer {
 
         // Set SVG dimensions (square for sunburst, responsive)
         const containerWidth = this.container.clientWidth - 40;
-        const radius = Math.min(300, containerWidth / 2 - 50);
+        const maxRadius = Math.min(300, containerWidth / 2 - 50);
+        const radius = maxRadius;
         this.width = radius * 2 + 100;
         this.height = radius * 2 + 100;
 
