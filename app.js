@@ -12,6 +12,8 @@ const exportSvgBtn = document.getElementById('exportSvgBtn');
 const exportPngBtn = document.getElementById('exportPngBtn');
 const exportDataBtn = document.getElementById('exportDataBtn');
 const exportButtons = document.getElementById('exportButtons');
+const chartSelector = document.getElementById('chartSelector');
+const chartType = document.getElementById('chartType');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const infoPanel = document.getElementById('infoPanel');
 
@@ -75,6 +77,9 @@ function setupEventListeners() {
             handleAnalyze();
         }
     });
+
+    // Chart type selector
+    chartType.addEventListener('change', handleChartTypeChange);
 }
 
 /**
@@ -99,11 +104,12 @@ async function handleAnalyze() {
         currentParseResult = parser.parse(text);
         console.log('Parse result:', currentParseResult);
 
-        // Visualize the result
-        visualizer.visualize(currentParseResult);
+        // Visualize the result with current chart type
+        visualizer.visualize(currentParseResult, chartType.value);
 
-        // Show export buttons
+        // Show export buttons and chart selector
         exportButtons.style.display = 'flex';
+        chartSelector.style.display = 'flex';
 
     } catch (error) {
         console.error('Analysis failed:', error);
@@ -128,6 +134,16 @@ function handleSample() {
 function handleClear() {
     inputText.value = '';
     inputText.focus();
+}
+
+/**
+ * Handle chart type change
+ */
+function handleChartTypeChange() {
+    if (!currentParseResult) return;
+
+    // Visualize with selected chart type
+    visualizer.visualize(currentParseResult, chartType.value);
 }
 
 /**
