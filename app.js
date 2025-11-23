@@ -36,19 +36,40 @@ let currentParseResult = null;
  * Initialize the application
  */
 async function initializeApp() {
+    console.log('🚀 App initialization started');
     showLoading(true);
 
     try {
         // Initialize the parser (load kuromoji dictionary)
+        console.log('📚 Loading kuromoji dictionary...');
         await parser.initialize();
-        console.log('Parser initialized successfully');
+        console.log('✅ Parser initialized successfully');
 
         // Set up event listeners
         setupEventListeners();
+        console.log('✅ Event listeners set up');
 
     } catch (error) {
-        console.error('Failed to initialize parser:', error);
-        alert('パーサーの初期化に失敗しました。ページを再読み込みしてください。');
+        console.error('❌ Failed to initialize parser:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+
+        // Show error in the UI
+        const container = document.getElementById('visualizationContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="placeholder">
+                    <div class="placeholder-icon">❌</div>
+                    <p class="placeholder-text">初期化エラー</p>
+                    <p class="placeholder-subtext">パーサーの初期化に失敗しました。<br/>ブラウザのコンソールを確認してください。</p>
+                </div>
+            `;
+        }
+
+        alert('パーサーの初期化に失敗しました。ブラウザのコンソール（F12）を確認してください。\n\nエラー: ' + error.message);
     } finally {
         showLoading(false);
     }

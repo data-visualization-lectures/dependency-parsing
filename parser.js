@@ -13,18 +13,38 @@ class DependencyParser {
      * Initialize the kuromoji tokenizer
      */
     async initialize() {
-        if (this.initialized) return;
+        if (this.initialized) {
+            console.log('✅ Parser already initialized');
+            return;
+        }
+
+        console.log('📥 Starting kuromoji initialization...');
+        console.log('📍 Dictionary path: https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict');
 
         return new Promise((resolve, reject) => {
-            kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict" }).build((err, tokenizer) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                this.tokenizer = tokenizer;
-                this.initialized = true;
-                resolve();
-            });
+            try {
+                const builder = kuromoji.builder({
+                    dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"
+                });
+
+                console.log('⏳ Building kuromoji...');
+
+                builder.build((err, tokenizer) => {
+                    if (err) {
+                        console.error('❌ Kuromoji build error:', err);
+                        reject(err);
+                        return;
+                    }
+
+                    this.tokenizer = tokenizer;
+                    this.initialized = true;
+                    console.log('✅ Kuromoji tokenizer initialized successfully');
+                    resolve();
+                });
+            } catch (error) {
+                console.error('❌ Kuromoji initialization error:', error);
+                reject(error);
+            }
         });
     }
 
