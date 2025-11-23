@@ -19,12 +19,12 @@ class DependencyParser {
         }
 
         console.log('📥 Starting kuromoji initialization...');
-        console.log('📍 Dictionary path: https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict');
+        console.log('📍 Dictionary path: ./dict');
 
         return new Promise((resolve, reject) => {
             try {
                 const builder = kuromoji.builder({
-                    dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"
+                    dicPath: "./dict"
                 });
 
                 console.log('⏳ Building kuromoji...');

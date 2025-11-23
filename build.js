@@ -71,7 +71,15 @@ if (output.errors.length > 0) {
     console.log('✓ CSS minified → styles.min.css');
 }
 
-// 4. Copy additional files (SVG dependencies)
+// 4. Copy kuromoji dictionary
+const dictSource = path.join(SOURCE_DIR, 'node_modules/kuromoji/dict');
+const dictDest = path.join(DOCS_DIR, 'dict');
+if (fs.existsSync(dictSource)) {
+    fs.cpSync(dictSource, dictDest, { recursive: true, force: true });
+    console.log('✓ kuromoji dictionary copied');
+}
+
+// 5. Copy additional files (SVG dependencies)
 const copyFiles = ['package.json'];
 copyFiles.forEach(file => {
     const inputPath = path.join(SOURCE_DIR, file);
@@ -82,7 +90,7 @@ copyFiles.forEach(file => {
     }
 });
 
-// 5. Create .nojekyll file to disable Jekyll processing on GitHub Pages
+// 6. Create .nojekyll file to disable Jekyll processing on GitHub Pages
 fs.writeFileSync(path.join(DOCS_DIR, '.nojekyll'), '');
 console.log('✓ .nojekyll created (GitHub Pages Jekyll disabled)');
 
@@ -94,4 +102,5 @@ console.log('  - parser.min.js');
 console.log('  - visualizer.min.js');
 console.log('  - styles.min.css');
 console.log('  - package.json');
+console.log('  - dict/ (kuromoji dictionary)');
 console.log('  - .nojekyll (GitHub Pages configuration)');
