@@ -642,13 +642,11 @@ class DependencyVisualizer {
                 }
             ],
             layout: {
-                name: 'cose',
+                name: 'dagre',
                 directed: true,
-                animate: true,
-                animationDuration: 500,
-                animationEasing: 'ease-out',
-                spacingFactor: 1.2,
-                nodeSeparation: 100
+                rankDir: 'TB',
+                animate: false,
+                spacingFactor: 1.2
             },
             wheelSensitivity: 0.1
         });
