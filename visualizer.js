@@ -559,6 +559,43 @@ class DependencyVisualizer {
 
             node.attr('transform', d => `translate(${d.x}, ${d.y})`);
         });
+
+        // Handle simulation end - apply scaling to fit in container
+        simulation.on('end', () => {
+            // Calculate bounds of all nodes
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+
+            nodes.forEach(d => {
+                minX = Math.min(minX, d.x - nodeRadius);
+                maxX = Math.max(maxX, d.x + nodeRadius);
+                minY = Math.min(minY, d.y - nodeRadius);
+                maxY = Math.max(maxY, d.y + nodeRadius);
+            });
+
+            const graphWidth = maxX - minX;
+            const graphHeight = maxY - minY;
+            const padding = 40;
+            const maxAllowedWidth = this.container.clientWidth - 40;
+
+            // Calculate scale factor
+            let scale = 1;
+            if (graphWidth + 2 * padding > maxAllowedWidth) {
+                scale = maxAllowedWidth / (graphWidth + 2 * padding);
+            }
+
+            // Update SVG height if needed
+            const scaledHeight = (graphHeight + 2 * padding) * scale;
+            if (scaledHeight < this.height) {
+                this.svg.attr('height', Math.max(600, scaledHeight));
+            }
+
+            // Center and scale the group
+            const translateX = (maxAllowedWidth - graphWidth * scale) / 2 - minX * scale;
+            const translateY = padding - minY * scale;
+
+            g.attr('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+        });
     }
 
     /**
