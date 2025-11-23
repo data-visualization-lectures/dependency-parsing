@@ -44,6 +44,9 @@ class DependencyVisualizer {
             case 'force':
                 this.visualizeForce(bunsetsu, dependencies);
                 break;
+            case 'cytoscape':
+                this.visualizeCytoscape(bunsetsu, dependencies);
+                break;
             case 'sankey':
                 this.visualizeSankey(bunsetsu, dependencies);
                 break;
@@ -559,6 +562,105 @@ class DependencyVisualizer {
 
             node.attr('transform', d => `translate(${d.x}, ${d.y})`);
         });
+    }
+
+    /**
+     * Visualize as Cytoscape network graph
+     */
+    visualizeCytoscape(bunsetsu, dependencies) {
+        // Set container dimensions
+        const containerWidth = this.container.clientWidth - 40;
+        const containerHeight = Math.max(600, window.innerHeight - 400);
+
+        // Create container div for Cytoscape
+        const cytoscapeContainer = document.createElement('div');
+        cytoscapeContainer.id = 'cytoscape-container';
+        cytoscapeContainer.style.width = containerWidth + 'px';
+        cytoscapeContainer.style.height = containerHeight + 'px';
+        cytoscapeContainer.style.margin = '0 auto';
+        this.container.appendChild(cytoscapeContainer);
+
+        // Prepare nodes and edges for Cytoscape
+        const nodes = bunsetsu.map((b, i) => ({
+            data: {
+                id: `node-${i}`,
+                label: b.surface
+            }
+        }));
+
+        const edges = dependencies.map((dep, i) => ({
+            data: {
+                id: `edge-${i}`,
+                source: `node-${dep.from}`,
+                target: `node-${dep.to}`,
+                label: dep.label
+            }
+        }));
+
+        // Initialize Cytoscape
+        const cy = cytoscape({
+            container: cytoscapeContainer,
+            elements: nodes.concat(edges),
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'content': 'data(label)',
+                        'text-valign': 'center',
+                        'text-halign': 'center',
+                        'background-color': '#ffffff',
+                        'border-color': '#4a90e2',
+                        'border-width': 2,
+                        'width': 'label',
+                        'height': 'label',
+                        'padding': '8px',
+                        'font-size': 12,
+                        'font-weight': 500,
+                        'color': '#333333'
+                    }
+                },
+                {
+                    selector: 'node:hover',
+                    style: {
+                        'background-color': '#f0f8ff',
+                        'border-color': '#2563eb',
+                        'border-width': 3
+                    }
+                },
+                {
+                    selector: 'edge',
+                    style: {
+                        'target-arrow-shape': 'triangle',
+                        'target-arrow-color': '#4a90e2',
+                        'line-color': '#4a90e2',
+                        'width': 2,
+                        'opacity': 0.7,
+                        'label': 'data(label)',
+                        'font-size': 10,
+                        'edge-text-rotation': 'autorotate'
+                    }
+                }
+            ],
+            layout: {
+                name: 'cose',
+                directed: true,
+                animate: true,
+                animationDuration: 500,
+                animationEasing: 'ease-out',
+                spacingFactor: 1.2,
+                nodeSeparation: 100
+            },
+            wheelSensitivity: 0.1
+        });
+
+        // Add click handler for node details
+        cy.on('tap', 'node', (event) => {
+            const nodeId = parseInt(event.target.id().split('-')[1]);
+            this.showBunsetsuDetails(bunsetsu[nodeId]);
+        });
+
+        // Fit graph to view
+        cy.fit();
     }
 
     /**
