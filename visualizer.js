@@ -70,7 +70,9 @@ class DependencyVisualizer {
 
         // Constrain width to container width for responsiveness
         const containerWidth = this.container.clientWidth - 40; // Account for padding
-        this.width = Math.min(containerWidth, this.width);
+        const maxAllowedWidth = containerWidth;
+        this.width = Math.min(maxAllowedWidth, this.width);
+        this.maxAllowedWidth = maxAllowedWidth; // Store for later use
 
         // Create SVG
         this.svg = d3.select(this.container)
@@ -80,7 +82,8 @@ class DependencyVisualizer {
             .attr('height', this.height)
             .attr('xmlns', 'http://www.w3.org/2000/svg')
             .style('display', 'block')
-            .style('margin', '0 auto');
+            .style('margin', '0 auto')
+            .style('overflow', 'visible');
 
         // Create main group
         const g = this.svg.append('g')
@@ -123,19 +126,31 @@ class DependencyVisualizer {
         const graphHeight = maxY - minY;
         const padding = 40;
 
-        // Update SVG dimensions if needed
-        this.width = Math.max(this.width, graphWidth + 2 * padding);
-        this.height = Math.max(this.height, graphHeight + 2 * padding);
+        // Calculate scale factor to fit within container
+        let scaleX = 1;
+        let scaleY = 1;
+        const svgWidth = graphWidth + 2 * padding;
+        const svgHeight = graphHeight + 2 * padding;
+
+        // If graph is too wide, scale it down
+        if (svgWidth > this.maxAllowedWidth) {
+            scaleX = this.maxAllowedWidth / svgWidth;
+            scaleY = scaleX; // Maintain aspect ratio
+        }
+
+        // Update SVG dimensions (use actual calculated size or max allowed)
+        const finalWidth = Math.min(this.maxAllowedWidth, svgWidth);
+        const finalHeight = svgHeight * scaleY;
 
         this.svg
-            .attr('width', this.width)
-            .attr('height', this.height);
+            .attr('width', finalWidth)
+            .attr('height', finalHeight);
 
         // Center the graph with proper offsets
-        const translateX = (this.width - graphWidth) / 2 - minX;
-        const translateY = padding - minY;
+        const translateX = (finalWidth - (graphWidth * scaleX)) / 2 - (minX * scaleX);
+        const translateY = (padding - minY) * scaleY;
 
-        g.attr('transform', `translate(${translateX}, ${translateY})`);
+        g.attr('transform', `translate(${translateX}, ${translateY}) scale(${scaleX})`);
 
         // Draw links (connections) with Bezier curves
         g.selectAll('.link')
