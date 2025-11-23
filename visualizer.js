@@ -7,6 +7,7 @@ class DependencyVisualizer {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         this.svg = null;
+        this.cy = null; // Cytoscape instance
         this.width = 0;
         this.height = 0;
         this.minBoxWidth = 80;
@@ -352,6 +353,35 @@ class DependencyVisualizer {
      * Export visualization as SVG
      */
     exportSVG() {
+        // Check if Cytoscape is active
+        if (this.cy) {
+            // Cytoscape doesn't support SVG export directly (canvas-based)
+            // Convert to PNG instead
+            const pngData = this.cy.png({ full: true, bg: '#ffffff' });
+
+            // Create SVG wrapper with embedded PNG
+            const width = this.cy.extent().w;
+            const height = this.cy.extent().h;
+
+            const svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <rect width="${width}" height="${height}" fill="#ffffff"/>
+    <image xlink:href="${pngData}" width="${width}" height="${height}"/>
+</svg>`;
+
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'dependency-tree.svg';
+            link.click();
+
+            URL.revokeObjectURL(url);
+            return;
+        }
+
+        // Export D3 SVG
         const svgElement = this.container.querySelector('svg');
         if (!svgElement) return;
 
@@ -373,6 +403,18 @@ class DependencyVisualizer {
      * Export visualization as PNG
      */
     exportPNG() {
+        // Check if Cytoscape is active
+        if (this.cy) {
+            // Export Cytoscape as PNG
+            const pngData = this.cy.png({ full: true, bg: '#ffffff' });
+            const link = document.createElement('a');
+            link.href = pngData;
+            link.download = 'dependency-tree.png';
+            link.click();
+            return;
+        }
+
+        // Export D3 SVG to PNG
         const svgElement = this.container.querySelector('svg');
         if (!svgElement) return;
 
@@ -593,7 +635,7 @@ class DependencyVisualizer {
         }));
 
         // Initialize Cytoscape
-        const cy = window.cytoscape({
+        this.cy = window.cytoscape({
             container: cytoscapeContainer,
             elements: nodes.concat(edges),
             style: [
@@ -625,7 +667,7 @@ class DependencyVisualizer {
         });
 
         // Apply dagre layout
-        cy.layout({
+        this.cy.layout({
             name: 'dagre',
             directed: true,
             rankDir: 'TB',
@@ -634,13 +676,13 @@ class DependencyVisualizer {
         }).run();
 
         // Add click handler for node details
-        cy.on('tap', 'node', (event) => {
+        this.cy.on('tap', 'node', (event) => {
             const nodeId = parseInt(event.target.id().split('-')[1]);
             this.showBunsetsuDetails(bunsetsu[nodeId]);
         });
 
         // Fit graph to view
-        cy.fit();
+        this.cy.fit();
     }
 }
 

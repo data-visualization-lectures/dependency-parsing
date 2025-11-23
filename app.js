@@ -133,6 +133,13 @@ async function handleAnalyze() {
         exportButtons.style.display = 'flex';
         chartSelector.style.display = 'flex';
 
+        // Hide SVG button for Cytoscape layout (canvas-based, not vector)
+        if (chartType.value === 'cytoscape') {
+            exportSvgBtn.style.display = 'none';
+        } else {
+            exportSvgBtn.style.display = 'flex';
+        }
+
     } catch (error) {
         console.error('Analysis failed:', error);
         alert('解析に失敗しました: ' + error.message);
@@ -166,6 +173,13 @@ function handleChartTypeChange() {
 
     // Visualize with selected chart type
     visualizer.visualize(currentParseResult, chartType.value);
+
+    // Hide SVG button for Cytoscape layout (canvas-based, not vector)
+    if (chartType.value === 'cytoscape') {
+        exportSvgBtn.style.display = 'none';
+    } else {
+        exportSvgBtn.style.display = 'flex';
+    }
 }
 
 /**
