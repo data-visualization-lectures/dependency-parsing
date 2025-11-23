@@ -19,6 +19,8 @@
 
 ### ビルド
 
+npm run build
+
 docsをサーブしながらブラウザで確認
 ```
 npm run serve:docs
