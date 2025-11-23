@@ -1,6 +1,6 @@
 /**
- * visualizer.js - Dependency Visualization using D3.js
- * Uses D3 hierarchy layout for proper tree visualization
+ * visualizer.js - Dependency Visualization using D3.js and Cytoscape.js
+ * Uses D3 hierarchy layout for tree visualization and Cytoscape dagre for network graphs
  */
 
 class DependencyVisualizer {
@@ -46,12 +46,6 @@ class DependencyVisualizer {
                 break;
             case 'cytoscape':
                 this.visualizeCytoscape(bunsetsu, dependencies);
-                break;
-            case 'sankey':
-                this.visualizeSankey(bunsetsu, dependencies);
-                break;
-            case 'sunburst':
-                this.visualizeSunburst(bunsetsu, dependencies);
                 break;
             default:
                 this.visualizeTree(bunsetsu, dependencies);
@@ -568,6 +562,7 @@ class DependencyVisualizer {
      * Visualize as Cytoscape network graph
      */
     visualizeCytoscape(bunsetsu, dependencies) {
+
         // Set container dimensions
         const containerWidth = this.container.clientWidth - 40;
         const containerHeight = Math.max(600, window.innerHeight - 400);
@@ -598,58 +593,45 @@ class DependencyVisualizer {
         }));
 
         // Initialize Cytoscape
-        const cy = cytoscape({
+        const cy = window.cytoscape({
             container: cytoscapeContainer,
             elements: nodes.concat(edges),
             style: [
                 {
                     selector: 'node',
                     style: {
+                        'background-color': '#11479e',
                         'content': 'data(label)',
                         'text-valign': 'center',
                         'text-halign': 'center',
-                        'background-color': '#ffffff',
-                        'border-color': '#4a90e2',
-                        'border-width': 2,
-                        'width': 'label',
-                        'height': 'label',
-                        'padding': '8px',
+                        'color': '#ffffff',
                         'font-size': 12,
                         'font-weight': 500,
-                        'color': '#333333'
-                    }
-                },
-                {
-                    selector: 'node:hover',
-                    style: {
-                        'background-color': '#f0f8ff',
-                        'border-color': '#2563eb',
-                        'border-width': 3
+                        'padding': '8px'
                     }
                 },
                 {
                     selector: 'edge',
                     style: {
+                        'width': 4,
                         'target-arrow-shape': 'triangle',
-                        'target-arrow-color': '#4a90e2',
-                        'line-color': '#4a90e2',
-                        'width': 2,
-                        'opacity': 0.7,
-                        'label': 'data(label)',
-                        'font-size': 10,
-                        'edge-text-rotation': 'autorotate'
+                        'line-color': '#9dbaea',
+                        'target-arrow-color': '#9dbaea',
+                        'curve-style': 'bezier'
                     }
                 }
             ],
-            layout: {
-                name: 'dagre',
-                directed: true,
-                rankDir: 'TB',
-                animate: false,
-                spacingFactor: 1.2
-            },
             wheelSensitivity: 0.1
         });
+
+        // Apply dagre layout
+        cy.layout({
+            name: 'dagre',
+            directed: true,
+            rankDir: 'TB',
+            animate: false,
+            spacingFactor: 1.2
+        }).run();
 
         // Add click handler for node details
         cy.on('tap', 'node', (event) => {
@@ -659,252 +641,6 @@ class DependencyVisualizer {
 
         // Fit graph to view
         cy.fit();
-    }
-
-    /**
-     * Visualize as sankey diagram
-     */
-    visualizeSankey(bunsetsu, dependencies) {
-        // Prepare sankey data
-        const nodes = bunsetsu.map((b, i) => ({
-            id: i,
-            name: b.surface,
-            bunsetsu: b
-        }));
-
-        const links = dependencies.map(dep => ({
-            source: dep.from,
-            target: dep.to,
-            value: 1,
-            label: dep.label
-        }));
-
-        // Set SVG dimensions (responsive to container width)
-        const containerWidth = this.container.clientWidth - 40; // Account for padding
-        this.width = Math.min(containerWidth, 1200); // Constrain to container width
-        this.height = Math.max(400, bunsetsu.length * 60);
-
-        // Create SVG
-        this.svg = d3.select(this.container)
-            .append('svg')
-            .attr('id', 'dependencyGraph')
-            .attr('width', this.width)
-            .attr('height', this.height)
-            .attr('xmlns', 'http://www.w3.org/2000/svg')
-            .style('display', 'block')
-            .style('margin', '0 auto');
-
-        // Create main group
-        const g = this.svg.append('g');
-
-        // Create sankey layout
-        const sankey = d3.sankey()
-            .nodeWidth(15)
-            .nodePadding(50)
-            .extent([[1, 1], [this.width - 1, this.height - 6]]);
-
-        const {nodes: sankeyNodes, links: sankeyLinks} = sankey({
-            nodes: nodes.map(d => ({...d})),
-            links: links.map(d => ({...d}))
-        });
-
-        // Create color scale
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-        // Draw links (sankey paths)
-        const link = g.selectAll('.link')
-            .data(sankeyLinks)
-            .enter()
-            .append('path')
-            .attr('class', 'link')
-            .attr('d', d3.sankeyLinkHorizontal())
-            .attr('stroke', d => color(d.source.id))
-            .attr('stroke-opacity', 0.5)
-            .attr('stroke-width', d => Math.max(1, d.width));
-
-        // Add link labels
-        g.selectAll('.link-label')
-            .data(sankeyLinks)
-            .enter()
-            .append('text')
-            .attr('class', 'link-label')
-            .attr('x', d => (d.source.x + d.target.x) / 2)
-            .attr('y', d => (d.source.y + d.target.y) / 2 - 5)
-            .attr('text-anchor', 'middle')
-            .attr('font-size', 10)
-            .attr('fill', '#666')
-            .text(d => d.label)
-            .style('pointer-events', 'none')
-            .style('opacity', 0.7);
-
-        // Draw nodes
-        const node = g.selectAll('.node')
-            .data(sankeyNodes)
-            .enter()
-            .append('g')
-            .attr('class', 'node');
-
-        // Add node rectangles
-        node.append('rect')
-            .attr('x', d => d.x0)
-            .attr('y', d => d.y0)
-            .attr('height', d => d.y1 - d.y0)
-            .attr('width', d => d.x1 - d.x0)
-            .attr('fill', d => color(d.id))
-            .attr('stroke', '#333')
-            .style('cursor', 'pointer')
-            .on('mouseenter', function (event, d) {
-                d3.select(this)
-                    .attr('stroke-width', 2)
-                    .attr('opacity', 0.9);
-
-                // Highlight connected links
-                link.style('stroke-opacity', linkData => {
-                    return (linkData.source.id === d.id || linkData.target.id === d.id) ? 1 : 0.2;
-                });
-
-                // Dim other nodes
-                node.selectAll('rect').style('opacity', nodeData => {
-                    return (nodeData.id === d.id ||
-                            sankeyLinks.some(l => (l.source.id === d.id && l.target.id === nodeData.id) ||
-                                                   (l.target.id === d.id && l.source.id === nodeData.id)))
-                        ? 1 : 0.4;
-                });
-            })
-            .on('mouseleave', function () {
-                d3.select(this)
-                    .attr('stroke-width', 1)
-                    .attr('opacity', 1);
-
-                node.selectAll('rect').style('opacity', 1);
-                link.style('stroke-opacity', 0.5);
-            })
-            .on('click', (_event, d) => {
-                this.showBunsetsuDetails(d.bunsetsu);
-            });
-
-        // Add node labels
-        node.append('text')
-            .attr('x', d => d.x0 < this.width / 2 ? d.x1 + 6 : d.x0 - 6)
-            .attr('y', d => (d.y0 + d.y1) / 2)
-            .attr('dy', '0.35em')
-            .attr('text-anchor', d => d.x0 < this.width / 2 ? 'start' : 'end')
-            .attr('font-size', 12)
-            .attr('font-weight', 500)
-            .text(d => d.name)
-            .style('pointer-events', 'none');
-    }
-
-    /**
-     * Visualize as sunburst diagram
-     */
-    visualizeSunburst(bunsetsu, dependencies) {
-        // Build hierarchy data for sunburst
-        const hierarchyData = this.buildHierarchy(bunsetsu, dependencies);
-
-        // Set SVG dimensions (square for sunburst, responsive)
-        const containerWidth = this.container.clientWidth - 40;
-        const maxRadius = Math.min(300, containerWidth / 2 - 50);
-        const radius = maxRadius;
-        this.width = radius * 2 + 100;
-        this.height = radius * 2 + 100;
-
-        // Create SVG
-        this.svg = d3.select(this.container)
-            .append('svg')
-            .attr('id', 'dependencyGraph')
-            .attr('width', this.width)
-            .attr('height', this.height)
-            .attr('xmlns', 'http://www.w3.org/2000/svg')
-            .style('display', 'block')
-            .style('margin', '0 auto');
-
-        // Create main group (centered)
-        const g = this.svg.append('g')
-            .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`);
-
-        // Create color scale
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-        // Create partition layout
-        const partition = d3.partition()
-            .size([2 * Math.PI, radius]);
-
-        // Create hierarchy
-        const root = d3.hierarchy(hierarchyData)
-            .sum(d => 1)
-            .sort((a, b) => b.value - a.value);
-
-        const nodes = partition(root).descendants();
-
-        // Create arc generator
-        const arc = d3.arc()
-            .startAngle(d => d.x0)
-            .endAngle(d => d.x1)
-            .innerRadius(d => d.y0)
-            .outerRadius(d => d.y1);
-
-        // Draw arcs
-        const slice = g.selectAll('.slice')
-            .data(nodes)
-            .enter()
-            .append('g')
-            .attr('class', 'slice');
-
-        slice.append('path')
-            .attr('class', 'sunburst-path')
-            .attr('d', arc)
-            .attr('fill', (d, i) => color(i % 10))
-            .attr('stroke', '#fff')
-            .attr('stroke-width', 2)
-            .style('cursor', d => d.depth > 0 ? 'pointer' : 'default')
-            .on('mouseenter', function (event, d) {
-                d3.select(this)
-                    .attr('stroke-width', 3)
-                    .attr('opacity', 0.9)
-                    .style('filter', 'brightness(1.2)');
-
-                // Dim other slices
-                slice.selectAll('.sunburst-path').style('opacity', nodeData => {
-                    return (nodeData.parent === d || d.parent === nodeData || nodeData === d) ? 1 : 0.3;
-                });
-            })
-            .on('mouseleave', function () {
-                d3.selectAll('.sunburst-path')
-                    .attr('stroke-width', 2)
-                    .attr('opacity', 1)
-                    .style('filter', 'none');
-            })
-            .on('click', (_event, d) => {
-                if (d.data.bunsetsu) {
-                    this.showBunsetsuDetails(d.data.bunsetsu);
-                }
-            });
-
-        // Add labels
-        slice.append('text')
-            .attr('transform', d => {
-                const angle = (d.x0 + d.x1) / 2;
-                const radius = (d.y0 + d.y1) / 2;
-                return `rotate(${angle * 180 / Math.PI - 90})translate(${radius},0)`;
-            })
-            .attr('text-anchor', d => {
-                const angle = (d.x0 + d.x1) / 2;
-                return angle > Math.PI ? 'end' : 'start';
-            })
-            .attr('transform', d => {
-                const angle = (d.x0 + d.x1) / 2;
-                const radius = (d.y0 + d.y1) / 2;
-                return `rotate(${angle * 180 / Math.PI - 90})translate(${radius},0)rotate(${angle > Math.PI ? 180 : 0})`;
-            })
-            .attr('font-size', d => Math.max(8, 16 - d.depth * 3))
-            .attr('fill', '#333')
-            .attr('dominant-baseline', 'middle')
-            .text(d => {
-                const text = d.data.bunsetsu ? d.data.bunsetsu.surface : 'ROOT';
-                return text.length > 4 ? text.substring(0, 3) + '.' : text;
-            })
-            .style('pointer-events', 'none');
     }
 }
 

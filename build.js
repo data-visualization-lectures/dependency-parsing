@@ -32,8 +32,9 @@ htmlContent = htmlContent
 htmlContent = htmlContent
     .replace(/href="styles\.css"/g, 'href="styles.min.css"');
 
-// Minify HTML (simple minification)
+// Minify HTML (preserve script and style content)
 const minifiedHtml = htmlContent
+    .replace(/<!--[\s\S]*?-->/g, '') // Remove HTML comments
     .replace(/\n\s+/g, '\n')  // Remove excess whitespace
     .replace(/\>\s+\</g, '><'); // Remove whitespace between tags
 
@@ -77,6 +78,14 @@ const dictDest = path.join(DOCS_DIR, 'dict');
 if (fs.existsSync(dictSource)) {
     fs.cpSync(dictSource, dictDest, { recursive: true, force: true });
     console.log('✓ kuromoji dictionary copied');
+}
+
+// 4b. Copy cytoscape-dagre library
+const cytoscapeDagreSource = path.join(SOURCE_DIR, 'node_modules/cytoscape-dagre/cytoscape-dagre.js');
+const cytoscapeDagreDest = path.join(DOCS_DIR, 'cytoscape-dagre.min.js');
+if (fs.existsSync(cytoscapeDagreSource)) {
+    fs.copyFileSync(cytoscapeDagreSource, cytoscapeDagreDest);
+    console.log('✓ cytoscape-dagre library copied');
 }
 
 // 5. Copy additional files (SVG dependencies)
