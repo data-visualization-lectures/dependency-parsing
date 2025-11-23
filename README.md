@@ -32,14 +32,10 @@ npm run build:serve
 ### ローカルサーバーで実行
 
 ```bash
-# Python 3 がインストールされている場合
-python3 -m http.server 8080
+npx http-server docs -p 3000 -o
 
-# または npx を使用
-npx http-server -p 8080
 ```
 
-ブラウザで http://localhost:8080 を開いてください。
 
 ## 技術スタック
 
