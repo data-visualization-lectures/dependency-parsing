@@ -82,6 +82,10 @@ copyFiles.forEach(file => {
     }
 });
 
+// 5. Create .nojekyll file to disable Jekyll processing on GitHub Pages
+fs.writeFileSync(path.join(DOCS_DIR, '.nojekyll'), '');
+console.log('✓ .nojekyll created (GitHub Pages Jekyll disabled)');
+
 console.log('\n✅ Build complete! Files generated in ./docs directory');
 console.log('\nGenerated files:');
 console.log('  - index.html (minified)');
@@ -90,3 +94,4 @@ console.log('  - parser.min.js');
 console.log('  - visualizer.min.js');
 console.log('  - styles.min.css');
 console.log('  - package.json');
+console.log('  - .nojekyll (GitHub Pages configuration)');
